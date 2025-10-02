@@ -1,0 +1,29 @@
+import yfinance as yf
+import pandas as pd
+
+def get_data(tickers, start="2019-01-01", end="2024-01-01"):
+    """Download adjusted close prices for a list of tickers."""
+    data = yf.download(tickers, start=start, end=end)["Close"]
+    return data.dropna()
+
+def compute_returns(price_data):
+    """Calculate daily returns."""
+    returns = price_data.pct_change().dropna()
+    return returns
+
+def compute_volatility(returns, window=21):
+    """Calculate rolling volatility (default: 21-day)."""
+    rolling_vol = returns.rolling(window=window).std()
+    return rolling_vol
+
+def compute_cumulative_returns(returns):
+    """Calculate cumulative returns from daily returns."""
+    cum_returns = (1 + returns).cumprod()
+    return cum_returns
+
+def compute_drawdowns(cum_returns):
+    """Calculate drawdowns from cumulative returns."""
+    rolling_max = cum_returns.cummax()
+    drawdowns = (cum_returns - rolling_max) / rolling_max
+    return drawdowns
+

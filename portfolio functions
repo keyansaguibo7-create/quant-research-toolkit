@@ -1,0 +1,64 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+import numpy as np
+
+
+def portfolio_performance(weights, mean_returns, cov_matrix):
+    """
+    Calculate portfolio return and volatility given weights.
+
+    Parameters:
+        weights (np.array): portfolio weights (sum to 1)
+        mean_returns (pd.Series): annualized mean returns
+        cov_matrix (pd.DataFrame): annualized covariance matrix
+
+    Returns:
+        (float, float): portfolio return, portfolio volatility
+    """
+    port_return = np.dot(weights, mean_returns)
+    port_vol = np.sqrt(weights.T @ cov_matrix @ weights)
+    return port_return, port_vol
+
+
+def simulate_portfolios(num_portfolios, mean_returns, cov_matrix, rf=0.0, seed=None):
+    """
+    Monte Carlo simulation for random portfolios.
+
+    Returns:
+        results (np.ndarray): shape (3, num_portfolios) -> [vol, return, Sharpe]
+        weights_record (np.ndarray): shape (num_portfolios, n_assets)
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    n_assets = len(mean_returns)
+    results = np.zeros((3, num_portfolios))
+    weights_record = np.zeros((num_portfolios, n_assets))
+
+    for i in range(num_portfolios):
+        weights = np.random.random(n_assets)
+        weights /= np.sum(weights)
+
+        port_return, port_vol = portfolio_performance(weights, mean_returns, cov_matrix)
+        sharpe = (port_return - rf) / port_vol
+
+        results[0, i] = port_vol
+        results[1, i] = port_return
+        results[2, i] = sharpe
+        weights_record[i, :] = weights
+
+    return results, weights_record
+
+
+def get_max_sharpe_portfolio(results, weights_record):
+    """Find weights for portfolio with maximum Sharpe ratio."""
+    idx = np.argmax(results[2])
+    return results[:, idx], weights_record[idx]
+
+
+def get_min_volatility_portfolio(results, weights_record):
+    """Find weights for portfolio with minimum volatility."""
+    idx = np.argmin(results[0])
+    return results[:, idx], weights_record[idx]

@@ -1,0 +1,192 @@
+<html>
+<head>
+<title>week1quant.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #cf8e6d;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+.ls0 { height: 1px; border-width: 0; color: #43454a; background-color:#43454a}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+week1quant.ipynb</font>
+</center></td></tr></table>
+<pre><span class="s0">#%% 
+</span><span class="s1">from </span><span class="s0">gettext </span><span class="s1">import </span><span class="s0">install</span>
+
+<span class="s1">import </span><span class="s0">yfinance </span><span class="s1">as </span><span class="s0">yf</span>
+<span class="s1">import </span><span class="s0">pandas </span><span class="s1">as </span><span class="s0">pd</span>
+<span class="s1">import </span><span class="s0">matplotlib</span><span class="s2">.</span><span class="s0">pyplot </span><span class="s1">as </span><span class="s0">plt</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">rcParams</span><span class="s2">[</span><span class="s3">&quot;animation.html&quot;</span><span class="s2">] = </span><span class="s3">&quot;jshtml&quot; </span>
+
+<span class="s0">tickers </span><span class="s2">= [</span><span class="s3">&quot;GOOG&quot;</span><span class="s2">, </span><span class="s3">&quot;IBM&quot;</span><span class="s2">, </span><span class="s3">&quot;AAPL&quot;</span><span class="s2">, </span><span class="s3">&quot;MSFT&quot;</span><span class="s2">, </span><span class="s3">&quot;AMZN&quot;</span><span class="s2">]</span>
+<span class="s0">data </span><span class="s2">= </span><span class="s0">yf</span><span class="s2">.</span><span class="s0">download</span><span class="s2">(</span><span class="s0">tickers</span><span class="s2">, </span><span class="s0">start</span><span class="s2">=</span><span class="s3">'2019-01-01'</span><span class="s2">, </span><span class="s0">end</span><span class="s2">=</span><span class="s3">'2025-01-01'</span><span class="s2">)[</span><span class="s3">&quot;Close&quot;</span><span class="s2">]</span>
+<span class="s0">print</span><span class="s2">(</span><span class="s0">data</span><span class="s2">.</span><span class="s0">head</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+These are my core data science and finance libraries: 
+ 
+yfinance — fetches historical stock prices directly from Yahoo Finance. 
+ 
+pandas — handles data in tables (DataFrames). 
+ 
+numpy — for math and matrix operations. 
+ 
+matplotlib — for visualization. <hr class="ls0">#%% 
+</span><span class="s4">#cleaning</span>
+<span class="s0">print</span><span class="s2">(</span><span class="s0">data</span><span class="s2">.</span><span class="s0">isnull</span><span class="s2">().</span><span class="s0">sum</span><span class="s2">())</span>
+<span class="s0">data </span><span class="s2">= </span><span class="s0">data</span><span class="s2">.</span><span class="s0">dropna</span><span class="s2">()</span><hr class="ls0"><span class="s0">#%% md 
+The first line checks for missing values (NaN) in the downloaded dataset using data.isnull().sum(). This provides a column-wise count of missing observations for each ticker, helping us confirm data integrity. 
+ 
+If any ticker contains missing values, we remove those rows using data.dropna(). This step guarantees that all assets share the same trading dates, which is critical for accurate return and covariance computations. 
+ 
+By cleaning the dataset at this stage, we: 
+ 
+-Eliminate potential misalignment between asset price series. 
+ 
+-Prevent runtime errors in later calculations. 
+ 
+-Ensure our portfolio metrics (returns, volatility, drawdowns) are based on a uniform and reliable data sample. 
+ 
+My takeaways: 
+Data cleaning ensures that subsequent quantitative analyses reflect true market movements rather than artifacts from missing or inconsistent data. <hr class="ls0">#%% 
+data</span><span class="s2">.</span><span class="s0">plot</span><span class="s2">(</span><span class="s0">figsize</span><span class="s2">=(</span><span class="s5">12</span><span class="s2">, </span><span class="s5">8</span><span class="s2">))</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">title</span><span class="s2">(</span><span class="s3">&quot;Stock Price History&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">ylabel</span><span class="s2">(</span><span class="s3">&quot;Price&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">xlabel</span><span class="s2">(</span><span class="s3">&quot;Date&quot;</span><span class="s2">)</span>
+
+<span class="s0">data</span><span class="s2">.</span><span class="s0">index </span><span class="s2">= </span><span class="s0">pd</span><span class="s2">.</span><span class="s0">to_datetime</span><span class="s2">(</span><span class="s0">data</span><span class="s2">.</span><span class="s0">index</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+Analysis: 
+This code generates a time series plot showing the daily closing prices of each stock over the selected date range. 
+Each line represents one ticker, allowing for easy visual comparison of their long-term price movements and relative volatility. 
+ 
+-data.plot(figsize=(12, 8)) — plots all stock prices on a single chart for side-by-side visualization. 
+ 
+-plt.title(), plt.ylabel(), and plt.xlabel() — label the chart for readability. 
+ 
+-data.index = pd.to_datetime(data.index) — ensures that the DataFrame’s index is properly formatted as datetime objects, which is essential for accurate time-based plotting and analysis. 
+ 
+This visualization helps identify general market trends, growth trajectories, and volatility patterns. 
+For instance, a stock with a steeper upward slope indicates stronger price appreciation, while frequent sharp movements suggest higher volatility. 
+ 
+My takeaway: 
+Plotting price history provides a foundational understanding of each asset’s behavior over time and sets the stage for deeper statistical analysis like returns and risk metrics. <hr class="ls0">#%% 
+</span><span class="s4">#daily returns</span>
+<span class="s0">returns </span><span class="s2">= </span><span class="s0">data</span><span class="s2">.</span><span class="s0">pct_change</span><span class="s2">().</span><span class="s0">dropna</span><span class="s2">()</span>
+<span class="s0">print</span><span class="s2">(</span><span class="s0">returns</span><span class="s2">.</span><span class="s0">head</span><span class="s2">())</span>
+
+<span class="s0">returns</span><span class="s2">.</span><span class="s0">plot</span><span class="s2">(</span><span class="s0">figsize</span><span class="s2">=(</span><span class="s5">12</span><span class="s2">, </span><span class="s5">8</span><span class="s2">))</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">title</span><span class="s2">(</span><span class="s3">&quot;Daily Returns&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">ylabel</span><span class="s2">(</span><span class="s3">&quot;Return&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">xlabel</span><span class="s2">(</span><span class="s3">&quot;Date&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">show</span><span class="s2">()</span><hr class="ls0"><span class="s0">#%% md 
+Analysis: 
+ 
+-data.pct_change() computes the percentage change between consecutive days for each stock, effectively capturing daily performance. 
+ 
+-.dropna() removes the first row (which has no previous day to compare against). 
+ 
+-The resulting returns DataFrame contains each asset’s day-to-day rate of change. 
+ 
+The plot shows each stock’s daily returns as a time series. 
+These values typically fluctuate around zero — positive values indicate gains, and negative values indicate losses. 
+ 
+Daily returns are a fundamental building block in quantitative finance because they allow us to measure: 
+ 
+-Short-term volatility and variability in prices. 
+ 
+-Correlations between assets. 
+ 
+-Portfolio performance metrics (like risk and Sharpe ratios). 
+ 
+A visual inspection of daily returns reveals how volatile each asset is: 
+ 
+-Stocks with larger spikes (up or down) have higher short-term risk. 
+ 
+-More stable lines indicate lower volatility and smoother performance. 
+ 
+My takeaway: 
+Daily returns transform raw price data into a standardized measure of performance that can be compared across assets and used for further analysis like volatility, cumulative returns, and drawdowns. <hr class="ls0">#%% 
+</span><span class="s4">#rolling volatility</span>
+<span class="s0">rolling_vol </span><span class="s2">= </span><span class="s0">returns</span><span class="s2">.</span><span class="s0">rolling</span><span class="s2">(</span><span class="s0">window</span><span class="s2">=</span><span class="s5">21</span><span class="s2">).</span><span class="s0">std</span><span class="s2">()</span>
+<span class="s0">rolling_vol</span><span class="s2">.</span><span class="s0">plot</span><span class="s2">(</span><span class="s0">figsize</span><span class="s2">=(</span><span class="s5">10</span><span class="s2">, </span><span class="s5">6</span><span class="s2">))</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">title</span><span class="s2">(</span><span class="s3">&quot;21-Day Rolling Volatility&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">show</span><span class="s2">()</span><hr class="ls0"><span class="s0">#%% md 
+Analysis: 
+ 
+-returns.rolling(window=21) applies a 21-day moving window (roughly one trading month). 
+ 
+-.std() computes the standard deviation of returns within each window, representing volatility. 
+ 
+-Plotting the result shows how each stock’s volatility evolves through time. 
+ 
+This graph helps visualize periods of high and low market turbulence: 
+ 
+-Spikes in volatility often occur during major market events, earnings announcements, or economic shocks. 
+ 
+-Lower volatility indicates stability or less market uncertainty. 
+ 
+By comparing volatility lines across assets: 
+ 
+-You can identify which stocks consistently exhibit higher risk. 
+ 
+-It becomes easier to spot diversification opportunities — pairing assets with uncorrelated or offsetting volatility patterns. <hr class="ls0">#%% 
+</span><span class="s4">#cumulative returns</span>
+<span class="s0">cum_returns </span><span class="s2">= (</span><span class="s5">1 </span><span class="s2">+ </span><span class="s0">returns</span><span class="s2">).</span><span class="s0">cumprod</span><span class="s2">()</span>
+<span class="s0">cum_returns</span><span class="s2">.</span><span class="s0">plot</span><span class="s2">(</span><span class="s0">figsize</span><span class="s2">=(</span><span class="s5">10</span><span class="s2">, </span><span class="s5">6</span><span class="s2">))</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">title</span><span class="s2">(</span><span class="s3">&quot;Cumulative Returns&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">show</span><span class="s2">()</span><hr class="ls0"><span class="s0">#%% md 
+Analysis: 
+ 
+-(1 + returns) converts daily percentage changes into growth factors (e.g., a 1% gain becomes 1.01). 
+ 
+-.cumprod() (cumulative product) multiplies these factors over time, compounding gains and losses. 
+ 
+-The resulting cum_returns DataFrame represents how $1 invested at the start of the time period would have evolved for each stock. 
+ 
+This chart provides a clear visualization of each asset’s total performance trajectory: 
+ 
+-A steadily upward-sloping line represents consistent growth. 
+ 
+-Flat or declining periods reflect stagnation or drawdowns. 
+ 
+-Comparing the slopes of different lines helps identify which stocks outperform or underperform over the long term. 
+ 
+My Takeaways: 
+Cumulative returns summarize how each stock’s price movements translate into actual compounded growth. 
+They offer a long-term view of investment performance and form the basis for comparing total returns across assets or portfolios. <hr class="ls0">#%% 
+</span><span class="s4">#Drawdown</span>
+<span class="s0">rolling_max </span><span class="s2">= </span><span class="s0">cum_returns</span><span class="s2">.</span><span class="s0">cummax</span><span class="s2">()</span>
+<span class="s0">drawdowns </span><span class="s2">= (</span><span class="s0">cum_returns </span><span class="s2">- </span><span class="s0">rolling_max</span><span class="s2">) / </span><span class="s0">rolling_max</span>
+
+<span class="s0">drawdowns</span><span class="s2">.</span><span class="s0">plot</span><span class="s2">(</span><span class="s0">figsize</span><span class="s2">=(</span><span class="s5">10</span><span class="s2">, </span><span class="s5">6</span><span class="s2">))</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">title</span><span class="s2">(</span><span class="s3">&quot;Daily Drawdowns&quot;</span><span class="s2">)</span>
+<span class="s0">plt</span><span class="s2">.</span><span class="s0">show</span><span class="s2">()</span><hr class="ls0"><span class="s0">#%% md 
+Analysis: 
+ 
+-cum_returns.cummax() computes the rolling maximum of cumulative returns — the highest value reached up to each point in time. 
+ 
+-(cum_returns - rolling_max) / rolling_max calculates how far the current value has fallen from that peak, expressed as a percentage. 
+ 
+-The result (drawdowns) captures periods of losses relative to previous highs. 
+ 
+When plotted, the chart displays drawdowns as negative values, where deeper troughs represent larger declines. 
+For instance, a value of -0.2 corresponds to a 20% drop from the prior peak. 
+ 
+-Sharp or prolonged drawdowns indicate high downside risk. 
+ 
+-Frequent shallow drawdowns suggest more stable performance. 
+ 
+-Comparing drawdown patterns between assets helps identify which ones recover faster or experience less severe losses during market stress. 
+ 
+My takeaways: 
+Drawdowns quantify the pain of losses — not just volatility. 
+While returns and volatility describe how much prices move, drawdowns show how badly things can go before they get better, making them a critical risk metric for any investment strategy <hr class="ls0">#%% 
+</span></pre>
+</body>
+</html>
